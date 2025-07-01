@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
+
     <title>Recipe finder</title>
 </head>
 <body>
@@ -20,6 +21,11 @@
             <a href="#">Categories</a>
             <a href="#" class="nav-link" data-section="favorites">My Favorites</a>
             </nav>
+        </div>
+        <div class="chat-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
         </div>
     </header>
     <main>
@@ -63,6 +69,19 @@
         <!-- Recipe cards will be dynamically inserted here -->
     </section>
 </main>
+<div class="chatbot-container">
+  <div class="chatbot-header">
+    <h3>Recipe Assistant</h3>
+    <button class="close-chat">×</button>
+  </div>
+  <div class="chatbot-messages"></div>
+  <div class="chatbot-input">
+    <input type="text" placeholder="Ask me about recipes..." />
+    <button class="send-btn">Send</button>
+  </div>
+</div>
 <script src="script.js"></script>
+
+
 </body>
 </html>

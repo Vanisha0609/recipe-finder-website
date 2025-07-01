@@ -1,5 +1,6 @@
-const API_KEY = '0db75438bae843cead0a0924d24385f1';
-const BASE_URL = 'https://api.spoonacular.com/recipes';
+const EDAMAM_APP_ID = '91a8ab2e'; // Register at https://developer.edamam.com/
+const EDAMAM_APP_KEY = '787c1ee4f3feb29de7cf3a620b1a4461';
+const EDAMAM_URL = 'https://api.edamam.com/api/recipes/v2';
 
 let recipes = [];
 let allRecipes = [];
@@ -13,35 +14,35 @@ let favoriteRecipes = JSON.parse(localStorage.getItem('favoriteRecipes')) || [];
 function getMockRecipes(searchTerm = '') {
     const allMockRecipes = [
         {
-            id: 101,
+            id: "101",
             title: "Classic Spaghetti Carbonara",
             ingredients: ["spaghetti", "eggs", "pancetta", "parmesan", "black pepper"],
             cookTime: "20 mins",
             image: "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
         },
         {
-            id: 102,
+            id: "102",
             title: "Vegetable Stir Fry",
             ingredients: ["broccoli", "carrots", "bell peppers", "soy sauce", "garlic"],
             cookTime: "15 mins",
             image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
         },
         {
-            id: 103,
+            id: "103",
             title: "Chicken Noodle Soup",
             ingredients: ["chicken", "noodles", "carrots", "celery", "onion"],
             cookTime: "30 mins",
             image: "https://plus.unsplash.com/premium_photo-1705406168512-a062aa7790b5?q=80&w=2038&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
         },
         {
-            id: 104,
+            id: "104",
             title: "Avocado Toast",
             ingredients: ["bread", "avocado", "lemon juice", "salt", "red pepper flakes"],
             cookTime: "5 mins",
             image: "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
         },
         {
-            id: 105,
+            id: "105",
             title: "Berry Smoothie",
             ingredients: ["strawberries", "blueberries", "yogurt", "milk", "honey"],
             cookTime: "5 mins",
@@ -65,29 +66,25 @@ function getMockRecipes(searchTerm = '') {
 async function fetchRecipesByIngredients(ingredients) {
     try {
         const response = await fetch(
-            `${BASE_URL}/findByIngredients?ingredients=${ingredients}&number=10&apiKey=${API_KEY}`
+            `${EDAMAM_URL}?type=public&q=${ingredients}&app_id=${EDAMAM_APP_ID}&app_key=${EDAMAM_APP_KEY}`
         );
         
-        if (!response.ok) {
-            const error = await response.json();
-            if (response.status === 402) {
-                apiLimitReached = true;
-                return getMockRecipes(ingredients);
-            }
-            throw new Error(error.message || 'Failed to fetch recipes');
-        }
+        if (!response.ok) throw new Error('API request failed');
         
         const data = await response.json();
-        return data.map(recipe => ({
-            id: recipe.id,
-            title: recipe.title,
-            ingredients: recipe.usedIngredients.map(ing => ing.name),
-            cookTime: "N/A",
-            image: recipe.image || 'https://via.placeholder.com/300x200?text=No+Image'
+        console.log('API response:', data);
+        if (!data.hits || data.hits.length === 0) {
+            return getMockRecipes(ingredients);
+        }
+        return data.hits.map(hit => ({
+            id: hit.recipe.uri.split('_')[1],
+            title: hit.recipe.label,
+            ingredients: hit.recipe.ingredientLines,
+            cookTime: hit.recipe.totalTime ? `${hit.recipe.totalTime} mins` : "N/A",
+            image: hit.recipe.image || 'https://via.placeholder.com/300x200?text=No+Image'
         }));
     } catch (error) {
         console.error('Error fetching recipes:', error);
-        apiLimitReached = true;
         return getMockRecipes(ingredients);
     }
 }
@@ -95,29 +92,26 @@ async function fetchRecipesByIngredients(ingredients) {
 async function fetchRandomRecipes() {
     try {
         const response = await fetch(
-            `${BASE_URL}/random?number=10&apiKey=${API_KEY}`
+            `${EDAMAM_URL}?type=public&q=chicken&app_id=${EDAMAM_APP_ID}&app_key=${EDAMAM_APP_KEY}&random=true`
         );
         
         if (!response.ok) {
-            const error = await response.json();
-            if (response.status === 402) {
-                apiLimitReached = true;
-                return getMockRecipes();
-            }
-            throw new Error(error.message || 'Failed to fetch random recipes');
+            throw new Error('Failed to fetch random recipes');
         }
         
         const data = await response.json();
-        return data.recipes.map(recipe => ({
-            id: recipe.id,
-            title: recipe.title,
-            ingredients: recipe.extendedIngredients.map(ing => ing.name),
-            cookTime: recipe.readyInMinutes ? `${recipe.readyInMinutes} mins` : "N/A",
-            image: recipe.image || 'https://via.placeholder.com/300x200?text=No+Image'
+        if (!data.hits || data.hits.length === 0) {
+            return getMockRecipes();
+        }
+        return data.hits.map(hit => ({
+            id: hit.recipe.uri.split('#')[1],
+            title: hit.recipe.label,
+            ingredients: hit.recipe.ingredientLines,
+            cookTime: hit.recipe.totalTime ? `${hit.recipe.totalTime} mins` : "N/A",
+            image: hit.recipe.image || 'https://via.placeholder.com/300x200?text=No+Image'
         }));
     } catch (error) {
         console.error('Error fetching random recipes:', error);
-        apiLimitReached = true;
         return getMockRecipes();
     }
 }
@@ -125,13 +119,13 @@ async function fetchRandomRecipes() {
 function renderRecipes(recipesToRender) {
     const recipeGrid = document.querySelector('.recipe-grid');
     recipeGrid.innerHTML = '';
-
-    if (apiLimitReached) {
-        const limitMsg = document.createElement('div');
-        limitMsg.className = 'api-limit';
-        recipeGrid.appendChild(limitMsg);
-    }
     
+    if (apiLimitReached) {
+    const limitMsg = document.createElement('div');
+    limitMsg.className = 'api-limit';
+    limitMsg.textContent = 'API limit reached. Showing mock data.';
+    recipeGrid.appendChild(limitMsg);
+    }
     if (currentSection === 'favorites' && recipesToRender.length === 0) {
         const noFavorites = document.createElement('div');
         noFavorites.className = 'no-results';
@@ -181,9 +175,13 @@ function toggleHeroSection(show) {
 }
 
 function toggleFavorite(e) {
-    const recipeId = parseInt(e.target.getAttribute('data-id'));
+    const recipeId = e.target.getAttribute('data-id');
     const recipe = allRecipes.find(r => r.id === recipeId)|| 
-                  recipes.find(r => r.id === recipeId);;
+                  recipes.find(r => r.id === recipeId);
+    if (!recipe) {
+        console.error('Recipe not found:', recipeId);
+        return;
+    }
     if (favorites.includes(recipeId)) {
         favorites = favorites.filter(id => id !== recipeId);
         favoriteRecipes = favoriteRecipes.filter(r => r.id !== recipeId);
