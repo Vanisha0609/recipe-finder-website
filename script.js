@@ -1,3 +1,4 @@
+
 const EDAMAM_APP_ID = '91a8ab2e'; // Register at https://developer.edamam.com/
 const EDAMAM_APP_KEY = '787c1ee4f3feb29de7cf3a620b1a4461';
 const EDAMAM_URL = 'https://api.edamam.com/api/recipes/v2';
