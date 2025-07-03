@@ -325,3 +325,70 @@ document.addEventListener('DOMContentLoaded', async () => {
         await showHome();
     }
 });
+let chatHistory = [];
+
+const COHERE_API_KEY = 'JHxG7N2PbEsfpqkCrlGDsIu5yi9vaIEAqu6zoBaH'; // Replace this with your actual API key
+
+async function getAIResponse(message) {
+  chatHistory.push({ role: "USER", message });
+  const response = await fetch('https://api.cohere.ai/v1/chat', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${COHERE_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: message,
+      model: "command-r-plus",
+      chat_history: chatHistory,
+      temperature: 0.7,        // Controls creativity (lower = more factual)
+      max_tokens: 100  
+    })
+  });
+
+  const data = await response.json();
+  const botReply = data.text || "Sorry, I couldn’t understand that.";
+
+  chatHistory.push({ role: "CHATBOT", message: botReply });
+
+  return botReply;
+}
+
+document.querySelector('.send-btn').addEventListener('click', async () => {
+  const input = document.querySelector('.chatbot-input input');
+  const userMessage = input.value.trim();
+  if (!userMessage) return;
+
+  addMessage(userMessage, 'user-message');
+  input.value = '';
+
+  const botReply = await getAIResponse(userMessage);
+  addMessage(botReply, 'bot-message');
+});
+
+function addMessage(text, className) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `message ${className}`;
+  msgDiv.textContent = text;
+  document.querySelector('.chatbot-messages').appendChild(msgDiv);
+  msgDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+document.querySelector('.chat-icon').addEventListener('click', () => {
+  document.querySelector('.chatbot-container').classList.add('active');
+});
+
+document.querySelector('.close-chat').addEventListener('click', () => {
+  document.querySelector('.chatbot-container').classList.remove('active');
+});
+
+document.querySelector('.chatbot-input input').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    document.querySelector('.send-btn').click();
+  }
+});
+
+document.querySelector('.close-chat').addEventListener('click', () => {
+  document.querySelector('.chatbot-container').classList.remove('active');
+  chatHistory = []; // Clear history on close
+});
