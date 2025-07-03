@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 let chatHistory = [];
 
-const COHERE_API_KEY = 'JHxG7N2PbEsfpqkCrlGDsIu5yi9vaIEAqu6zoBaH'; // Replace this with your actual API key
+const COHERE_API_KEY = 'JHxG7N2PbEsfpqkCrlGDsIu5yi9vaIEAqu6zoBaH'; 
 
 async function getAIResponse(message) {
   chatHistory.push({ role: "USER", message });
@@ -341,7 +341,7 @@ async function getAIResponse(message) {
       message: message,
       model: "command-r-plus",
       chat_history: chatHistory,
-      temperature: 0.7,        // Controls creativity (lower = more factual)
+      temperature: 0.7,        
       max_tokens: 100  
     })
   });
